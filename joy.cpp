@@ -123,24 +123,24 @@ ListSub<T>* addSublist(ListSub<T>*& list, ListSub<T>* sublist)
 }
 
 template <class T>
-T first(ListSub<T>* list) 
+ListSub<T>* first(ListSub<T>* list) 
 {
-    if (list == nullptr) 
-    {
-        throw std::runtime_error("List is empty");
-    }
     if (list->type == DATA) 
     {
-        return list->sublist.data;
+        ListSub<T>* newNode = (ListSub<T>*) malloc(sizeof(ListSub<T>));
+
+        newNode->type = DATA;
+        newNode->sublist.data = list->sublist.data;
+        newNode->next = NULL;
+        
+        return newNode; 
     } 
     else if (list->type == SUBLIST) 
     {
         return first(list->sublist.sub);
     } 
-    else 
-    {
-        throw std::runtime_error("Unknown type");
-    }
+
+    return NULL;
 }
 
 template <class T>
@@ -227,36 +227,13 @@ ListSub<T>* swap(ListSub<T>* list)
         return list;
     }
 
-    ListSub<T>* tmp = NULL;
+    ListSub<T>* first = list;
+    ListSub<T>* second = list->next;
 
-    if (list->type == ValueType::DATA)
-    {
-        tmp = addData(tmp, list->sublist.data);
-        tmp = addData(tmp, list->next->sublist.data);
+    first->next = second->next;
+    second->next = first;
 
-        list = Pop(list);
-        list = Pop(list);
-
-        list = addData(list, tmp->next->sublist.data);
-        list = addData(list, tmp->sublist.data);
-
-        return list;
-    }
-    else if (list->type == ValueType::SUBLIST)
-    {
-        tmp = addSublist(tmp, list->sublist.sub);
-        tmp = addSublist(tmp, list->next->sublist.sub);
-
-        list = Pop(list);
-        list = Pop(list);
-
-        list = addSublist(list, tmp->next->sublist.sub);
-        list = addSublist(list, tmp->sublist.sub);
-
-        return list;
-    }
-
-    return NULL;
+    return second;
 }
 
 template <class T>
@@ -493,10 +470,9 @@ ListSub<std::string>* calculate(ListSub<std::string>* token)
         {
             if (token->sublist.data == "first" && stack != NULL)
             {
-                std::string tmp = first(reverseList(stack));
-
+                ListSub<std::string>* tmp = first(stack);
                 stack = Pop(stack);
-                stack = addData(stack, tmp);
+                stack = addData(stack, tmp->sublist.data);
             }
             else if (token->sublist.data == "rest" && stack != NULL)
             {
@@ -562,6 +538,11 @@ ListSub<std::string>* calculate(ListSub<std::string>* token)
             {
                 stack = addData(stack, token->sublist.data);
             }
+
+            PrintSub(stack);
+            std::cout << " ";
+            PrintSub(token->next);
+            std::cout << std::endl;
         }
         else if (token->type == ValueType::SUBLIST)
         {
@@ -576,7 +557,7 @@ ListSub<std::string>* calculate(ListSub<std::string>* token)
 
 int main()
 {
-    std::string str_1 = "[1 2 3] [4 5] [23 47] swap";
+    std::string str_1 = "[1 2 3 4] [2 3 4 5] first";
     ListSub<std::string>* res = tokenize(str_1);
     res = Parser(res);
 
@@ -585,27 +566,8 @@ int main()
 
     ListSub<std::string>* pr= calculate(res);
 
-    PrintSub(reverseList(pr));
-    std::cout << std::endl;
+    //PrintSub(reverseList(pr));
+    //std::cout << std::endl;
 
     return 0;
 }
-
-//1*3+4
-//+ 1 * 3 4
-//4 3 1 * +
-
-//(4+2)*5
-
-//4 2 * 5 +
-
-//(1+3)*(5+2)
-
-//1 3 + 5 2 + * 
-
-//(4+5+7)*(6-1)
-//4 5 + 7 + 6 1 - *
-
-//токенизация   "45  67 +"
-
-//-> "45","67","+"
